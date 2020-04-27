@@ -1,91 +1,86 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Jumbotron from "../components/Jumbotron";
 import DeleteBtn from "../components/DeleteBtn";
 import API from "../utils/API";
 import Nav from "../components/Nav/index";
+import axios from "axios";
 import { Col, Row, Container } from "../components/Grid";
 import { List, ListItem } from "../components/List";
-import { Input, TextArea, FormBtn } from "../components/Form";
+import { Input, FormBtn } from "../components/Form";
 
 function Books() {
   // Setting our component's initial state
   const [books, setBooks] = useState([])
-  const [formObject, setFormObject] = useState({})
-
-  // Load all books and store them with setBooks
-  useEffect(() => {
-    loadBooks()
-  }, [])
+  const [searchState, setSearchState] = useState("")
 
   // Loads all books and sets them to books
-  function loadBooks() {
-    API.getBooks()
-      .then(res => 
-        setBooks(res.data)
+  function handleBookSearch(event) {
+    event.preventDefault();
+    axios.get("https://www.googleapis.com/books/v1/volumes?q=" + searchState)
+      .then(res =>
+        setBooks(res.data.items)
       )
       .catch(err => console.log(err));
   };
 
-
-    return (
-      <Nav page={"books"}/>
-      <Container fluid>
-        <Row>
-          <Col size="md-6">
-            <Jumbotron>
-              <h1>What Books Should I Read?</h1>
-            </Jumbotron>
-            <form>
-              <Input
-                onChange={() => {}}
-                name="title"
-                placeholder="Title (required)"
-              />
-              <Input
-                onChange={() => {}}
-                name="author"
-                placeholder="Author (required)"
-              />
-              <TextArea
-                onChange={() => {}}
-                name="synopsis"
-                placeholder="Synopsis (Optional)"
-              />
-              <FormBtn
-                disabled={!(formObject.author && formObject.title)}
-                onClick={() => {}}
-              >
-                Submit Book
-              </FormBtn>
-            </form>
-          </Col>
-          <Col size="md-6 sm-12">
-            <Jumbotron>
-              <h1>Books On My List</h1>
-            </Jumbotron>
-            {books.length ? (
-              <List>
-                {books.map(book => {
-                  return (
-                    <ListItem key={book._id}>
-                      <a href={"/books/" + book._id}>
-                        <strong>
-                          {book.title} by {book.author}
-                        </strong>
-                      </a>
-                      <DeleteBtn onClick={() =>{}} />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            ) : (
-              <h3>No Results to Display</h3>
-            )}
-          </Col>
-        </Row>
-      </Container>
-    );
+  function handleInputChange(event) {
+    setSearchState(event.target.value);
   }
+
+  function handleBookSave() {
+  }
+
+
+  return (
+    <Container fluid>
+      <Nav page={"books"} />
+      <Row>
+        <Col size="md-12">
+          <Jumbotron>
+            <h1>Search for a book</h1>
+          </Jumbotron>
+          <form>
+            <Input
+              onChange={handleInputChange}
+              name="Search"
+              placeholder="Search for a book"
+            />
+            <FormBtn
+              onClick={handleBookSearch}
+            >
+              Search google books
+              </FormBtn>
+          </form>
+        </Col>
+      </Row>
+      <List>
+        {books.length ?
+          books.map(book =>
+            <ListItem key={book.id}>
+              <img src={
+                book.volumeInfo.imageLinks === undefined
+                  ? ""
+                  : `${book.volumeInfo.imageLinks.thumbnail}`
+              }></img>
+              <h3>{book.volumeInfo.title}</h3>
+              <h5>{book.volumeInfo.authors.join(", ")}</h5>
+              <h6>{book.volumeInfo.publishedDate}</h6>
+              <p>{book.volumeInfo.description}</p>
+              <button className="btn btn-primary" onClick={() => handleBookSave(
+                book.volumeInfo.title,
+                book.volumeInfo.authors,
+                book.volumeInfo.description,
+                book.volumeInfo.previewLink,
+                book.volumeInfo.infoLink
+              )}>Save book</button>
+              <a href={book.volumeInfo.infoLink} target="_blank" className="btn btn-primary">View</a>
+            </ListItem>)
+          : <div>No results</div>
+        }
+      </List>
+    </Container>
+  );
+}
 
 
 export default Books;
