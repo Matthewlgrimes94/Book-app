@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Jumbotron from "../components/Jumbotron";
-import DeleteBtn from "../components/DeleteBtn";
 import API from "../utils/API";
 import Nav from "../components/Nav/index";
 import axios from "axios";
@@ -27,7 +26,15 @@ function Books() {
     setSearchState(event.target.value);
   }
 
-  function handleBookSave() {
+  function handleBookSave(id, title, authors, description, image, link) {
+    API.saveBook({
+      bookId: id,
+      title: title,
+      authors: authors,
+      description: description,
+      image: image,
+      link: link
+    });
   }
 
 
@@ -53,6 +60,8 @@ function Books() {
           </form>
         </Col>
       </Row>
+      <Row>
+        <Col size="md-12">
       <List>
         {books.length ?
           books.map(book =>
@@ -60,24 +69,31 @@ function Books() {
               <img src={
                 book.volumeInfo.imageLinks === undefined
                   ? ""
-                  : `${book.volumeInfo.imageLinks.thumbnail}`
+                  : book.volumeInfo.imageLinks.thumbnail
               }></img>
               <h3>{book.volumeInfo.title}</h3>
               <h5>{book.volumeInfo.authors.join(", ")}</h5>
               <h6>{book.volumeInfo.publishedDate}</h6>
               <p>{book.volumeInfo.description}</p>
               <button className="btn btn-primary" onClick={() => handleBookSave(
+                book.id,
                 book.volumeInfo.title,
                 book.volumeInfo.authors,
                 book.volumeInfo.description,
-                book.volumeInfo.previewLink,
+                book.volumeInfo.imageLinks.thumbnail || "No thumbnail",
                 book.volumeInfo.infoLink
               )}>Save book</button>
-              <a href={book.volumeInfo.infoLink} target="_blank" className="btn btn-primary">View</a>
+              <a href={book.volumeInfo.infoLink}
+                role="button"
+                target="_blank"
+                className="btn btn-primary active float-right">
+                View</a>
             </ListItem>)
-          : <div>No results</div>
+          : <Col size="md-12"><h1>No results</h1></Col>
         }
       </List>
+      </Col>
+      </Row>
     </Container>
   );
 }
